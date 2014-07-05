@@ -52,7 +52,7 @@
     <body>
         <h1><a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC">RecordRTC</a> <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio">over Socket.io</a></h1>
         <p>
-            <video id="camera-preview" controls style="border: 1px solid rgb(15, 158, 238); width: 94%;"></video> 
+	    <video id="camera-preview" style="border: 1px solid rgb(15, 158, 238); width: 94%;"></video>
         </p>
         
         <div style="display:none;">
@@ -74,8 +74,9 @@
                 cameraPreview.parentNode.innerHTML = '<audio id="camera-preview" controls style="border: 1px solid rgb(15, 158, 238); width: 94%;"></audio> ';
             }
             
-
-	    var socketio = io();
+	        var socketio = io();
+			var mediaStream = false;
+            
             socketio.on('connect', function() {
                 startRecording.disabled = false;
             });
@@ -94,12 +95,15 @@
                         audio: true,
                         video: true
                     }, function(stream) {
+			mediaStream = stream;
                         recordAudio = RecordRTC(stream, {
                             onAudioProcessStarted: function() {
                                 recordVideoSeparately && recordVideo.startRecording();
                                 
                                 cameraPreview.src = window.URL.createObjectURL(stream);
                                 cameraPreview.play();
+				cameraPreview.muted = true;
+				cameraPreview.controls = false;
                             }
                         });
                         
@@ -141,6 +145,7 @@
                                 };
 
                                 socketio.emit('message', files);
+				mediaStream.stop();
                             });
 
                         });
@@ -165,6 +170,7 @@
                         };
 
                         socketio.emit('message', files);
+			mediaStream.stop();
                      });
                         
                     cameraPreview.src = '';
@@ -184,6 +190,8 @@
                 
                 cameraPreview.src = href
                 cameraPreview.play();
+		cameraPreview.muted = false;
+		cameraPreview.controls = true;
             });
             
             socketio.on('ffmpeg-output', function(result) {
